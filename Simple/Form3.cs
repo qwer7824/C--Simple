@@ -1,14 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Security.Cryptography;
 using static Simple.PassWord_SHA256;
 
 namespace Simple
@@ -36,22 +27,46 @@ namespace Simple
                     {
                         mysql.Open();
 
+                        String username = txtID.Text;
                         String Password = txtPW.Text;
 
+                    Boolean Sign = true;
+                     
+                    String result = EncryptionHelper.EncryptionSHA256(Password);
+
+                    string selectQuery = "SELECT * FROM user WHERE username = \'" + username + "\' ";
+
+                    MySqlCommand user = new MySqlCommand(selectQuery, mysql);
+
+                    MySqlDataReader userAccount = user.ExecuteReader();
+
+                    while (userAccount.Read())
+                    {
+                        if (username == (string)userAccount["username"])
+                        {
+                            MessageBox.Show("이미 있는 아이디 입니다.");
+                            Sign=false;
+                        }
+                        else
+                        {
+                            Sign = true;
+                        }
                         
+                    }
+                    userAccount.Close();
 
-
-                        String result = EncryptionHelper.EncryptionSHA256(Password);
-
+                    if (Sign == true)
+                    {
                         string insertQuery = string.Format("INSERT INTO user (username, password) VALUES ('{0}', '{1}');", txtID.Text, result);
 
-                        MySqlCommand command = new MySqlCommand(insertQuery, mysql);
+                        MySqlCommand command = new(insertQuery, mysql);
                         if (command.ExecuteNonQuery() != 1)
                             MessageBox.Show("Failed to insert data.");
 
+                        MessageBox.Show("회원가입 완료");
                         txtID.Text = "";
                         txtPW.Text = "";
-
+                    }
                 }
                 }
                 catch (Exception exc)
